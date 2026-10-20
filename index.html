@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fresh'd — Your Fridge, Your Way</title>
+  <link rel="icon" href="images/freshd-logo.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <header class="site-header">
+    <a href="index.html" class="logo">
+      <img src="images/freshd-logo.png" alt="Fresh'd Home">
+    </a>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <nav class="sticker-nav" aria-label="Main navigation">
+        <a class="sticker sticker-fill" href="#fill-fridge">
+          Fill Fridge
+        </a>
+
+        <a class="sticker sticker-buy" href="#buy-list">
+          Buy List
+        </a>
+
+        <a class="sticker sticker-customize" href="#customize">
+          Customize
+        </a>
+
+        <a class="sticker sticker-useby" href="#use-by">
+          Use By
+        </a>
+      </nav>
+
+      <div class="fridge-area">
+        <button class="fridge" id="fridge-button"
+                aria-label="Open refrigerator"
+                aria-expanded="false">
+          <div class="fridge-top">
+            <div class="fridge-interior">
+              <div class="shelf"></div>
+              <div class="shelf"></div>
+              <div class="shelf"></div>
+            </div>
+
+            <div class="fridge-door left-door">
+              <span class="handle"></span>
+            </div>
+
+            <div class="fridge-door right-door">
+              <span class="handle"></span>
+            </div>
+          </div>
+
+          <div class="freezer-drawer">
+            <span class="freezer-handle"></span>
+          </div>
+        </button>
+
+        <p class="fridge-hint">CLICK TO OPEN</p>
+      </div>
+    </section>
+
+    <section class="placeholder-section" id="fill-fridge">
+      <h2>Fill Fridge</h2>
+      <p>Organize your groceries, your way.</p>
+    </section>
+
+    <section class="placeholder-section" id="buy-list">
+      <h2>Buy List</h2>
+      <p>Never forget what you need.</p>
+    </section>
+
+    <section class="placeholder-section" id="customize">
+      <h2>Customize</h2>
+      <p>Make your fridge yours.</p>
+    </section>
+
+    <section class="placeholder-section" id="use-by">
+      <h2>Use By</h2>
+      <p>Know what to use first.</p>
+    </section>
+  </main>
+</body>
+</html>
