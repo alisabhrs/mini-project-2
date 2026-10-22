@@ -220,16 +220,30 @@
 .sticker-nav {
     display: flex;
     align-items: center;
-    justify-content: space-around;
-    gap: 12px;
+    justify-content: space-between;
+    gap: clamp(4px, 1vw, 16px);
+}
+
+.sticker-nav a {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
 }
 
 .sticker-nav img {
     display: block;
-    width: 100%;
-    max-width: 115px;
-    height: auto;
+    width: clamp(58px, 8vw, 120px);
+    height: clamp(58px, 8vw, 120px);
     object-fit: contain;
+}
+
+@media (max-width: 950px) {
+    .sticker-nav img {
+        width: clamp(58px, 8vw, 76px);
+        height: clamp(58px, 8vw, 76px);
+    }
 }
 
 /* Place mode buttons below navigation */
@@ -282,11 +296,264 @@
         min-height: 350px;
     }
 
+}
+
+/* BUTTON INTERACTIONS */
+
+.receipt-panel[hidden],
+.organize-instructions[hidden],
+#stock-list [hidden] {
+    display: none !important;
+}
+
+.fridge-layout:has(.stock-panel.organize-mode) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+}
+
+.stock-panel.organize-mode {
+    grid-column: 1;
+}
+
+@media (max-width: 600px) {
     .sticker-nav {
-        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        scrollbar-width: thin;
+    }
+
+    .sticker-nav a {
+        flex: 0 0 64px;
     }
 
     .sticker-nav img {
-        max-width: 75px;
+        width: 64px;
+        height: 64px;
     }
+}
+
+.fridge-layout:has(.stock-panel.organize-mode) .fridge-panel {
+    grid-column: 2;
+}
+
+.mode-btn,
+.filter-btn,
+.fridge-view-buttons button {
+    cursor: pointer;
+}
+
+.fridge-view-buttons button.active {
+    background: #b31512;
+    color: white;
+    border-color: #b31512;
+}
+
+.filter-btn.active {
+    background: white;
+    color: black;
+}
+
+.mode-switch {
+    transform: translateX(-10px);
+}
+
+/* ==========================================
+   FRESH'D — YOUR STOCK CARD DESIGN FIX
+   ========================================== */
+
+.stock-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 24px;
+}
+
+.stock-item {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    padding: 16px;
+    background: #101010;
+    border: 1px solid #555;
+    border-radius: 12px;
+    color: #fff;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.food-emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    width: 44px;
+    height: 44px;
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.food-details {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    width: 100%;
+}
+
+.food-details strong {
+    display: block;
+    font-size: 16px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    margin-bottom: 6px;
+}
+
+.food-meta {
+    display: block;
+    font-size: 11px;
+    line-height: 1.6;
+    color: #bbb;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.food-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+}
+
+.food-actions button {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 6px;
+    background: transparent;
+    border: 1px solid #777;
+    border-radius: 5px;
+    color: white;
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.food-actions button:hover {
+    background: #b31512;
+    border-color: #b31512;
+    color: white;
+}
+
+.food-picture {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+}
+
+.stock-item.selected {
+    border-color: #b31512;
+}
+
+.stock-empty {
+    padding: 35px 10px;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+}
+
+/* Extra stock buttons */
+
+.add-another-btn,
+.clear-stock-btn {
+    display: inline-block;
+    width: auto;
+    max-width: 100%;
+    padding: 10px 12px;
+    margin-top: 14px;
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.clear-stock-btn {
+    background: transparent;
+    color: #ddd;
+    border: 1px solid #777;
+    border-radius: 4px;
+}
+
+.clear-stock-btn:hover {
+    background: #b31512;
+    border-color: #b31512;
+    color: white;
+}
+
+/* DRAGGABLE FOOD INSIDE FRIDGE */
+
+#fridge-container {
+    position: relative;
+}
+
+#placed-foods {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.placed-food {
+    position: absolute;
+    pointer-events: auto;
+    cursor: grab !important;
+    touch-action: none;
+    user-select: none;
+    z-index: 6;
+}
+
+.placed-food:active {
+    cursor: grabbing !important;
+    transform: translate(-50%, -50%) scale(1.15) !important;
+}
+
+.drop-zone {
+    z-index: 2;
+}
+
+.drop-zone.drag-over {
+    outline: 2px dashed #b31512;
+    background: rgba(179, 21, 18, 0.15);
+}
+
+/* DATE TYPE SELECTOR */
+
+.date-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.date-section select,
+.date-section input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+#date-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#date-input-container[hidden] {
+    display: none !important;
+}
+
+.date-section label {
+    font-size: 12px;
+    letter-spacing: 0.5px;
 }

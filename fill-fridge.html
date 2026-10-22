@@ -126,10 +126,28 @@
               >
             </div>
 
-            <div>
-              <label for="food-date">EXPIRATION DATE</label>
-              <input type="date" id="food-date">
-            </div>
+           
+<div class="date-section">
+
+  <label for="date-type">DATE TYPE</label>
+
+  <select id="date-type">
+    <option value="expiration">Expiration Date</option>
+    <option value="purchased">Purchase Date</option>
+    <option value="production">Production Date</option>
+    <option value="none">No Date</option>
+  </select>
+
+  <div id="date-input-container">
+    <label for="food-date" id="date-label">
+      EXPIRATION DATE
+    </label>
+
+    <input type="date" id="food-date">
+  </div>
+
+</div>
+
 
           </div>
 

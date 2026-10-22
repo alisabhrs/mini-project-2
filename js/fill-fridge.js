@@ -1,111 +1,735 @@
-/* Fresh'd Fill Fridge: standalone vanilla JS; no external dependencies. */
+/* FRESH'D — FILL FRIDGE */
 (() => {
-  'use strict';
-  const KEY = 'freshd-inventory-v1';
-  const $ = id => document.getElementById(id);
-  const form = $('food-form');
-  const stage = $('fridge-stage');
-  const workspace = document.querySelector('.workspace');
-  const fridgeImage = $('fridge-image');
-  const images = {closed:'images/fridge-closed.png',fridge:'images/fridge-opened.png',freezer:'images/freezer-opened.png',both:'images/fridge-and-freezer-opened.png'};
-  const emoji = {'Fruit':'🍓','Vegetables':'🥬','Dairy & Eggs':'🥚','Meat & Seafood':'🥩','Drinks':'🥛','Frozen Foods':'🧊','Snacks':'🍪','Condiments':'🫙','Other':'🥫'};
-  const shelfCenter = {top:[50,31],middle:[50,44],bottom:[50,55],freezer:[50,80]};
-  let items = load();
-  let organizing = false;
-  let filter = 'all';
-  let view = 'both';
-  let editingId = null;
-  let selectedId = null;
-  let draggedId = null;
-  function load(){try{const value=JSON.parse(localStorage.getItem(KEY));return Array.isArray(value)?value:[]}catch{return []}}
-  function save(){try{localStorage.setItem(KEY,JSON.stringify(items));return true}catch{showError('Browser storage is full. Try smaller images or remove old items.');return false}}
-  function showError(message){$('form-error').textContent=message;$('form-error').hidden=false}
-  function clearError(){$('form-error').hidden=true;$('form-error').textContent=''}
-  function foodIcon(item){if(item.image){const img=document.createElement('img');img.className='food-picture';img.src=item.image;img.alt='';return img}const span=document.createElement('span');span.className='food-emoji';span.textContent=emoji[item.category]||'🥫';span.setAttribute('aria-hidden','true');return span}
-  function niceDate(item){if(!item.date||item.dateType==='none')return 'No date';const [y,m,d]=item.date.split('-').map(Number);if(!y||!m||!d)return 'No date';return `${item.dateType==='purchased'?'Bought ':'Exp. '}${new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`}
-  function dateStatus(item){if(!item.date||item.dateType!=='expiration')return '';const [y,m,d]=item.date.split('-').map(Number);const now=new Date();now.setHours(0,0,0,0);const days=Math.round((new Date(y,m-1,d)-now)/86400000);return days<0?' • EXPIRED':days<=3?' • USE SOON':''}
-  function filteredItems(){return items.filter(item=>filter==='all'||(filter==='unplaced'?!item.shelf:filter==='freezer'?item.shelf==='freezer':item.shelf!=='freezer'))}
-  function render(){
-    $('stock-count').textContent=`(${items.length})`;
-    $('placed-count').textContent=`${items.filter(item=>item.shelf).length} PLACED`;
-    const list=$('stock-list');list.replaceChildren();
-    const shown=filteredItems();$('empty-state').hidden=shown.length>0;
-    $('empty-state').textContent=items.length?'No items match this filter.':'Your fridge is waiting! Add your first item.';
-    for(const item of shown){
-      const li=document.createElement('li');li.className='stock-item'+(item.id===selectedId?' selected':'');li.draggable=organizing;
-      li.addEventListener('dragstart',event=>{if(!organizing){event.preventDefault();return}draggedId=item.id;event.dataTransfer.setData('text/plain',item.id);event.dataTransfer.effectAllowed='move'});
-      const handle=document.createElement('span');handle.className='drag-handle';handle.textContent='⠿';handle.title='Drag to fridge';li.append(handle,foodIcon(item));
-      const details=document.createElement('div');details.className='food-details';
-      const name=document.createElement('div');name.className='food-name';name.textContent=item.name;
-      const meta=document.createElement('div');meta.className='food-meta';meta.textContent=`${item.category}${item.brand?' • '+item.brand:''}\n${item.quantity} ${item.unit} | ${niceDate(item)}${dateStatus(item)}${item.shelf?' | '+item.shelf.toUpperCase():''}`;meta.style.whiteSpace='pre-line';details.append(name,meta);li.append(details);
-      const actions=document.createElement('div');actions.className='food-actions';
-      const choose=document.createElement('button');choose.type='button';choose.className='select-food';choose.textContent=organizing?'PLACE':'SELECT';choose.setAttribute('aria-label',`Select ${item.name}`);choose.addEventListener('click',()=>select(item.id));actions.append(choose);
-      const edit=document.createElement('button');edit.type='button';edit.textContent='EDIT';edit.addEventListener('click',()=>editItem(item));actions.append(edit);
-      const del=document.createElement('button');del.type='button';del.textContent='DELETE';del.addEventListener('click',()=>{if(confirm(`Delete ${item.name}?`)){items=items.filter(x=>x.id!==item.id);if(selectedId===item.id)selectedId=null;save();render()}});actions.append(del);li.append(actions);list.append(li)
-    }
-    document.querySelectorAll('.filter').forEach(btn=>{const active=btn.dataset.filter===filter;btn.classList.toggle('is-selected',active);btn.setAttribute('aria-pressed',String(active))});
-    $('shelf-actions').hidden=!organizing||!selectedId;
-    renderPlaced();
-  }
-  function renderPlaced(){
-    const box=$('placed-foods');box.replaceChildren();
-    if(view==='closed')return;
-    for(const item of items.filter(x=>x.shelf&&(view==='both'||(view==='freezer'?x.shelf==='freezer':x.shelf!=='freezer')))){
-      const [cx,cy]=shelfCenter[item.shelf]||shelfCenter.middle;
-      const el=document.createElement('button');el.type='button';el.className='placed-food'+(selectedId===item.id?' selected':'');el.style.left=`${item.x??cx}%`;el.style.top=`${item.y??cy}%`;el.title=`${item.name} — select`;el.setAttribute('aria-label',`Select ${item.name} on ${item.shelf}`);el.addEventListener('click',()=>select(item.id));
-      if(item.image){const img=document.createElement('img');img.src=item.image;img.alt='';el.append(img)}else el.textContent=emoji[item.category]||'🥫';
-      box.append(el)
-    }
-  }
-  function select(id){selectedId=id;render();if(organizing)$('place-shelf').focus()}
-  function editItem(item){editingId=item.id;$('food-category').value=item.category;$('food-name').value=item.name;$('food-brand').value=item.brand||'';$('food-quantity').value=item.quantity;$('food-unit').value=item.unit;$('food-date-type').value=item.dateType||'expiration';$('food-date').value=item.date||'';dateToggle();$('save-food').textContent='✓ SAVE CHANGES';$('cancel-edit').hidden=false;setMode(false);$('food-name').focus();window.scrollTo({top:0,behavior:'smooth'})}
-  function resetForm(){form.reset();editingId=null;$('food-quantity').value=1;$('save-food').textContent='＋ ADD TO FRIDGE';$('cancel-edit').hidden=true;dateToggle();clearError()}
-  function dateToggle(){const noDate=$('food-date-type').value==='none';$('food-date').disabled=noDate;if(noDate)$('food-date').value=''}
-  function setMode(next){organizing=next;workspace.classList.toggle('organizing',next);$('mode-add').classList.toggle('is-active',!next);$('mode-organize').classList.toggle('is-active',next);$('mode-add').setAttribute('aria-pressed',String(!next));$('mode-organize').setAttribute('aria-pressed',String(next));$('organize-hint').hidden=!next;render()}
-  function setView(next){view=next;fridgeImage.src=images[next];fridgeImage.alt={closed:'Closed refrigerator',fridge:'Open refrigerator',freezer:'Open freezer drawer',both:'Refrigerator and freezer both open'}[next];document.querySelectorAll('[data-view]').forEach(btn=>btn.classList.toggle('is-selected',btn.dataset.view===next));stage.classList.toggle('closed-view',next==='closed');document.querySelectorAll('.shelf-zone').forEach(zone=>{zone.hidden=next==='closed'||(next==='fridge'&&zone.dataset.storage==='freezer')||(next==='freezer'&&zone.dataset.storage==='fridge')});renderPlaced()}
-  function placeItem(id,shelf,x,y){const item=items.find(x=>x.id===id);if(!item)return;const [cx,cy]=shelfCenter[shelf];item.shelf=shelf;item.x=x??cx;item.y=y??cy;selectedId=id;save();render();if(view==='closed'||(shelf==='freezer'&&view==='fridge')||(shelf!=='freezer'&&view==='freezer'))setView('both')}
-  async function fileToDataURL(file){if(!file)return null;if(file.size>750000)throw Error('Please choose a food photo smaller than 750 KB.');return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('Could not read image.'));reader.readAsDataURL(file)})}
-  form.addEventListener('submit',async event=>{
-    event.preventDefault();clearError();const name=$('food-name').value.trim();const quantity=Number($('food-quantity').value);if(!name||!Number.isInteger(quantity)||quantity<1||quantity>9999){showError('Enter a food name and a whole-number quantity between 1 and 9999.');return}
-    try{const existing=items.find(x=>x.id===editingId);const photo=await fileToDataURL($('food-image').files[0]);const item={id:existing?.id||((crypto.randomUUID&&crypto.randomUUID())||String(Date.now())+Math.random()),name,category:$('food-category').value,brand:$('food-brand').value.trim(),quantity,unit:$('food-unit').value,dateType:$('food-date-type').value,date:$('food-date').value,image:photo||existing?.image||null,shelf:existing?.shelf||null,x:existing?.x??null,y:existing?.y??null};
-      if(existing)items=items.map(x=>x.id===existing.id?item:x);else items.unshift(item);if(!save()){items=load();return}resetForm();render();$('food-name').focus()
-    }catch(error){showError(error.message||'Could not save this item.')}
-  });
-  $('cancel-edit').addEventListener('click',resetForm);$('food-date-type').addEventListener('change',dateToggle);
-  $('mode-add').addEventListener('click',()=>setMode(false));$('mode-organize').addEventListener('click',()=>setMode(true));
-  $('add-another').addEventListener('click',()=>{setMode(false);$('food-name').focus()});
-  document.querySelectorAll('.filter').forEach(btn=>btn.addEventListener('click',()=>{filter=btn.dataset.filter;render()}));
-  document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>setView(btn.dataset.view)));
-  document.querySelectorAll('.shelf-zone').forEach(zone=>{
-    zone.addEventListener('dragover',event=>{if(!organizing||zone.hidden)return;event.preventDefault();zone.classList.add('drag-over')});
-    zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
-    zone.addEventListener('drop',event=>{event.preventDefault();zone.classList.remove('drag-over');if(!organizing||zone.hidden)return;const id=event.dataTransfer.getData('text/plain')||draggedId;if(!items.some(item=>item.id===id))return;const rect=stage.getBoundingClientRect();const x=Math.max(0,Math.min(100,(event.clientX-rect.left)/rect.width*100));const y=Math.max(0,Math.min(100,(event.clientY-rect.top)/rect.height*100));placeItem(id,zone.dataset.shelf,x,y)})
-  });
-  $('place-button').addEventListener('click',()=>{if(selectedId)placeItem(selectedId,$('place-shelf').value)});
-  $('unplace-button').addEventListener('click',()=>{const item=items.find(x=>x.id===selectedId);if(item){item.shelf=null;item.x=null;item.y=null;save();render()}});
-  $('clear-placements').addEventListener('click',()=>{if(!items.some(x=>x.shelf))return;if(confirm('Remove all food from shelves? Your stock list will be kept.')){items.forEach(item=>{item.shelf=null;item.x=null;item.y=null});save();render()}});
-  setView('both');dateToggle();setMode(false);
-})();
+  "use strict";
 
-const fridgeViews = {
+  const $ = id => document.getElementById(id);
+
+  const form = $("food-form");
+  const list = $("stock-list");
+  const fridgeImage = $("fridge-image");
+
+  if (!form || !list || !fridgeImage) {
+    console.error("Fresh'd: Required HTML elements are missing.");
+    return;
+  }
+
+  const STORAGE_KEY = "freshd-inventory-v1";
+
+  const fridgeImages = {
     closed: "images/fridge-closed.png",
     fridge: "images/fridge-opened.png",
     freezer: "images/freezer-opened.png",
     both: "images/fridge-and-freezer-opened.png"
-};
+  };
 
-document.querySelectorAll(".fridge-view-buttons button").forEach(button => {
-    button.addEventListener("click", () => {
-        const view = button.dataset.view;
-        const fridgeImage = document.getElementById("fridge-image");
+  const foodIcons = {
+    Fruit: "🍓",
+    Vegetables: "🥬",
+    Dairy: "🥚",
+    "Dairy & Eggs": "🥚",
+    Meat: "🥩",
+    "Meat & Seafood": "🥩",
+    Drinks: "🥛",
+    Frozen: "🧊",
+    "Frozen Foods": "🧊",
+    Snacks: "🍪",
+    Other: "🥫"
+  };
 
-        if (!fridgeImage || !fridgeViews[view]) return;
+  const shelfPositions = {
+    top: [50, 31],
+    middle: [50, 44],
+    bottom: [50, 55],
+    freezer: [50, 80]
+  };
 
-        fridgeImage.src = fridgeViews[view];
+  let items = loadItems();
+  let mode = "add";
+  let filter = "all";
+  let view = "fridge";
+  let editingId = null;
 
-        document.querySelectorAll(".fridge-view-buttons button")
-            .forEach(btn => btn.classList.remove("active"));
+  function loadItems() {
+    try {
+      const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  }
 
-        button.classList.add("active");
+  function saveItems() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      return true;
+    } catch {
+      showError("Browser storage is full. Remove some items.");
+      return false;
+    }
+  }
+
+  function showError(text) {
+    let error = $("form-error");
+
+    if (!error) {
+      error = document.createElement("p");
+      error.id = "form-error";
+      error.setAttribute("role", "alert");
+      form.prepend(error);
+    }
+
+    error.textContent = text;
+    error.hidden = !text;
+  }
+
+  function foodIcon(item) {
+    return foodIcons[item.category] || "🥫";
+  }
+
+  function isFreezer(item) {
+    return item.storage === "freezer" || item.shelf === "freezer";
+  }
+
+  
+function expiryStatus(item) {
+  if (!item.date || item.dateType === "none") {
+    return "No date";
+  }
+
+  if (item.dateType === "purchased") {
+    return "Bought " + item.date;
+  }
+
+  if (item.dateType === "production") {
+    return "Produced " + item.date;
+  }
+
+  const [year, month, day] = item.date.split("-").map(Number);
+  const expiry = new Date(year, month - 1, day);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const days = Math.round(
+    (expiry - today) / 86400000
+  );
+
+  if (days < 0) return "EXPIRED";
+  if (days <= 3) return "USE SOON";
+
+  return "Expires " + item.date;
+  }
+
+  function makeButton(text, onClick, className = "") {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = text;
+    button.className = className;
+    button.addEventListener("click", onClick);
+    return button;
+  }
+
+  /* ADD ITEMS / ORGANIZE */
+
+  function setMode(nextMode) {
+    mode = nextMode;
+
+    const receipt = $("receipt-panel");
+    const stock = $("stock-panel");
+    const instructions = $("organize-instructions");
+
+    if (receipt) receipt.hidden = mode === "organize";
+
+    if (stock) {
+      stock.classList.toggle("organize-mode", mode === "organize");
+    }
+
+    if (instructions) {
+      instructions.hidden = mode !== "organize";
+    }
+
+    const addButton = $("add-mode-btn");
+    const organizeButton = $("organize-mode-btn");
+
+    if (addButton) {
+      addButton.classList.toggle("active", mode === "add");
+      addButton.setAttribute("aria-pressed", mode === "add");
+    }
+
+    if (organizeButton) {
+      organizeButton.classList.toggle("active", mode === "organize");
+      organizeButton.setAttribute(
+        "aria-pressed",
+        mode === "organize"
+      );
+    }
+
+    render();
+  }
+
+  /* FRIDGE IMAGE SWITCHING */
+
+  function setView(nextView) {
+    if (!fridgeImages[nextView]) return;
+
+    view = nextView;
+
+    fridgeImage.style.opacity = "0.35";
+    fridgeImage.src = fridgeImages[nextView];
+
+    const descriptions = {
+      closed: "Closed refrigerator",
+      fridge: "Open refrigerator",
+      freezer: "Open freezer",
+      both: "Open refrigerator and freezer"
+    };
+
+    fridgeImage.alt = descriptions[nextView];
+
+    document.querySelectorAll(
+      ".fridge-view-buttons [data-view]"
+    ).forEach(button => {
+      const active = button.dataset.view === nextView;
+
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active);
     });
+
+    renderPlacedFood();
+  }
+
+  fridgeImage.style.transition = "opacity 220ms ease";
+
+  fridgeImage.addEventListener("load", () => {
+    fridgeImage.style.opacity = "1";
+  });
+
+  fridgeImage.addEventListener("error", () => {
+    fridgeImage.style.opacity = "1";
+    console.error("Missing fridge image:", fridgeImage.src);
+  });
+
+  /* STOCK LIST */
+
+  function render() {
+    const count = $("stock-count");
+
+    if (count) {
+      count.textContent = items.length;
+    }
+
+    list.replaceChildren();
+
+    const visibleItems = items.filter(item => {
+      if (filter === "all") return true;
+      if (filter === "freezer") return isFreezer(item);
+      return !isFreezer(item);
+    });
+
+    if (visibleItems.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "stock-empty";
+
+      empty.textContent = items.length
+        ? "No groceries in this section."
+        : "YOUR FRIDGE IS EMPTY. ADD ITEMS TO GET STARTED!";
+
+      list.append(empty);
+    }
+
+    visibleItems.forEach(item => {
+      const row = document.createElement("div");
+      row.className = "stock-item";
+      row.dataset.storage = isFreezer(item)
+        ? "freezer"
+        : "fridge";
+
+      row.draggable = mode === "organize";
+
+      row.addEventListener("dragstart", event => {
+        if (mode !== "organize") {
+          event.preventDefault();
+          return;
+        }
+
+        event.dataTransfer.setData("text/plain", item.id);
+        event.dataTransfer.effectAllowed = "move";
+      });
+
+      const picture = document.createElement("span");
+      picture.className = "food-emoji";
+
+      if (item.image) {
+        const image = document.createElement("img");
+        image.src = item.image;
+        image.alt = "";
+        image.className = "food-picture";
+        picture.append(image);
+      } else {
+        picture.textContent = foodIcon(item);
+      }
+
+      const details = document.createElement("div");
+      details.className = "food-details";
+
+      const name = document.createElement("strong");
+      name.textContent = item.name;
+
+      const meta = document.createElement("div");
+      meta.className = "food-meta";
+
+      meta.textContent =
+        `${item.quantity} ${item.unit || "pcs"} · ` +
+        `${item.category} · ${expiryStatus(item)}` +
+        (item.shelf ? ` · ${item.shelf.toUpperCase()}` : "");
+
+      details.append(name, meta);
+
+      const actions = document.createElement("div");
+      actions.className = "food-actions";
+
+      actions.append(
+        makeButton(
+          mode === "organize" ? "PLACE" : "SELECT",
+          () => {
+            if (mode === "organize") {
+              placeItem(
+                item.id,
+                isFreezer(item) ? "freezer" : "middle"
+              );
+            } else {
+              row.classList.toggle("selected");
+            }
+          }
+        )
+      );
+
+      actions.append(
+        makeButton("EDIT", () => editItem(item))
+      );
+
+      actions.append(
+        makeButton("DELETE", () => {
+          if (confirm(`Delete ${item.name}?`)) {
+            items = items.filter(food => food.id !== item.id);
+            saveItems();
+            render();
+          }
+        })
+      );
+
+      row.append(picture, details, actions);
+      list.append(row);
+    });
+
+    document.querySelectorAll(".filter-btn").forEach(button => {
+      const active = button.dataset.filter === filter;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active);
+    });
+
+    renderPlacedFood();
+  }
+
+  /* FOOD IMAGES ON FRIDGE SHELVES */
+
+  function renderPlacedFood() {
+    const container = $("fridge-container");
+    if (!container) return;
+
+    let overlay = $("placed-foods");
+
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "placed-foods";
+      overlay.style.cssText =
+        "position:absolute;inset:0;pointer-events:none;";
+
+      container.append(overlay);
+    }
+
+    overlay.replaceChildren();
+
+    if (view === "closed") return;
+
+    const placedItems = items.filter(item => {
+      if (!item.shelf) return false;
+      if (view === "both") return true;
+      if (view === "freezer") return item.shelf === "freezer";
+      return item.shelf !== "freezer";
+    });
+
+    placedItems.forEach(item => {
+      const [defaultX, defaultY] =
+        shelfPositions[item.shelf] || shelfPositions.middle;
+
+     
+const food = makeButton(
+  foodIcon(item),
+  () => {},
+  "placed-food"
+);
+
+// Allow food to be moved around inside the fridge
+food.addEventListener("pointerdown", event => {
+  if (mode !== "organize") return;
+
+  event.preventDefault();
+
+  const container = $("fridge-container");
+  const rect = container.getBoundingClientRect();
+
+  food.setPointerCapture(event.pointerId);
+
+  const moveFood = moveEvent => {
+    const x = Math.max(
+      8,
+      Math.min(
+        92,
+        ((moveEvent.clientX - rect.left) / rect.width) * 100
+      )
+    );
+
+    const y = Math.max(
+      8,
+      Math.min(
+        92,
+        ((moveEvent.clientY - rect.top) / rect.height) * 100
+      )
+    );
+
+    food.style.left = x + "%";
+    food.style.top = y + "%";
+
+    item.x = x;
+    item.y = y;
+  };
+
+  const stopMoving = () => {
+    food.removeEventListener("pointermove", moveFood);
+    food.removeEventListener("pointerup", stopMoving);
+    food.removeEventListener("pointercancel", stopMoving);
+
+    saveItems();
+  };
+
+  food.addEventListener("pointermove", moveFood);
+  food.addEventListener("pointerup", stopMoving);
+  food.addEventListener("pointercancel", stopMoving);
 });
+
+      food.style.cssText = `
+        position: absolute;
+        left: ${item.x ?? defaultX}%;
+        top: ${item.y ?? defaultY}%;
+        transform: translate(-50%, -50%);
+        font-size: 30px;
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        pointer-events: auto;
+      `;
+
+      food.title = item.name;
+
+      if (item.image) {
+        food.textContent = "";
+
+        const image = document.createElement("img");
+        image.src = item.image;
+        image.alt = item.name;
+        image.style.cssText =
+          "width:48px;height:48px;object-fit:contain;";
+
+        food.append(image);
+        
+food.style.touchAction = "none";
+food.style.userSelect = "none";
+food.draggable = false;
+
+      }
+
+      overlay.append(food);
+    });
+  }
+
+  function placeItem(id, shelf, x, y) {
+    const item = items.find(food => food.id === id);
+    if (!item) return;
+
+    item.shelf = shelf;
+    item.storage = shelf === "freezer" ? "freezer" : "fridge";
+
+    const position = shelfPositions[shelf] || shelfPositions.middle;
+
+    item.x = x ?? position[0];
+    item.y = y ?? position[1];
+
+    if (!saveItems()) return;
+
+    if (
+      view === "closed" ||
+      (shelf === "freezer" && view === "fridge") ||
+      (shelf !== "freezer" && view === "freezer")
+    ) {
+      setView("both");
+    }
+
+    render();
+  }
+
+  /* EDIT GROCERIES */
+
+  function editItem(item) {
+    editingId = item.id;
+
+    $("food-category").value = item.category;
+    $("food-name").value = item.name;
+    $("food-brand").value = item.brand || "";
+    $("food-quantity").value = item.quantity;
+   $("date-type").value = item.dateType || "expiration";
+updateDateField();
+$("food-date").value = item.date || "";
+    $("storage").value = isFreezer(item) ? "freezer" : "fridge";
+
+    const submit = form.querySelector('[type="submit"]');
+
+    if (submit) {
+      submit.textContent = "✓ SAVE CHANGES";
+    }
+
+    setMode("add");
+    $("food-name").focus();
+  }
+
+  function resetForm() {
+    form.reset();
+    updateDateField();
+    editingId = null;
+
+    $("food-quantity").value = 1;
+
+    const submit = form.querySelector('[type="submit"]');
+
+    if (submit) {
+      submit.textContent = "+ ADD TO FRIDGE";
+    }
+
+    showError("");
+  }
+
+  /* SUBMIT RECEIPT FORM */
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    showError("");
+
+    const name = $("food-name").value.trim();
+    const quantity = Number($("food-quantity").value);
+    const category = $("food-category").value;
+    const storage = $("storage").value;
+
+    if (
+      !name ||
+      !category ||
+      !["fridge", "freezer"].includes(storage) ||
+      !Number.isInteger(quantity) ||
+      quantity < 1 ||
+      quantity > 9999
+    ) {
+      showError(
+        "Enter a category, item name, and a whole-number quantity from 1 to 9999."
+      );
+      return;
+    }
+
+    const existing = items.find(item => item.id === editingId);
+
+    const item = {
+      id: existing?.id ||
+        `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      name,
+      category,
+      brand: $("food-brand").value.trim(),
+      quantity,
+      unit: existing?.unit || "pcs",
+      storage,
+      date: $("date-type").value === "none"
+  ? ""
+  : $("food-date").value,
+
+dateType: $("date-type").value,
+      image: existing?.image || null,
+      shelf: existing?.shelf || null,
+      x: existing?.x ?? null,
+      y: existing?.y ?? null
+    };
+
+    if (
+      existing &&
+      isFreezer(existing) !== (storage === "freezer")
+    ) {
+      item.shelf = null;
+      item.x = null;
+      item.y = null;
+    }
+
+    const previousItems = [...items];
+
+    if (existing) {
+      items = items.map(food =>
+        food.id === existing.id ? item : food
+      );
+    } else {
+      items.unshift(item);
+    }
+
+    if (!saveItems()) {
+      items = previousItems;
+      return;
+    }
+
+    resetForm();
+    render();
+    $("food-name").focus();
+  });
+
+  /* CONNECT ALL BUTTONS */
+
+  $("add-mode-btn")?.addEventListener("click", () => {
+    setMode("add");
+  });
+
+  $("organize-mode-btn")?.addEventListener("click", () => {
+    setMode("organize");
+  });
+
+  $("add-another-btn")?.addEventListener("click", () => {
+    setMode("add");
+    $("food-name").focus();
+  });
+
+  document.querySelectorAll(".filter-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      filter = button.dataset.filter;
+      render();
+    });
+  });
+
+  document.querySelectorAll(
+    ".fridge-view-buttons [data-view]"
+  ).forEach(button => {
+    button.addEventListener("click", () => {
+      setView(button.dataset.view);
+    });
+  });
+
+  /* DRAG FOOD ONTO SHELVES */
+
+  document.querySelectorAll(".drop-zone").forEach(zone => {
+    zone.addEventListener("dragover", event => {
+      if (mode !== "organize" || view === "closed") return;
+
+      event.preventDefault();
+      zone.classList.add("drag-over");
+    });
+
+    zone.addEventListener("dragleave", () => {
+      zone.classList.remove("drag-over");
+    });
+
+    zone.addEventListener("drop", event => {
+      event.preventDefault();
+      zone.classList.remove("drag-over");
+
+      if (mode !== "organize" || view === "closed") return;
+
+      const id = event.dataTransfer.getData("text/plain");
+      const shelf = zone.dataset.shelf;
+
+      if (!id || !shelfPositions[shelf]) return;
+
+      const container = $("fridge-container");
+      const rect = container.getBoundingClientRect();
+
+      const x = Math.max(
+        15,
+        Math.min(85, (event.clientX - rect.left) / rect.width * 100)
+      );
+
+      const y = Math.max(
+        15,
+        Math.min(85, (event.clientY - rect.top) / rect.height * 100)
+      );
+
+      placeItem(id, shelf, x, y);
+    });
+  });
+
+  /* CLEAR ALL STOCK */
+
+  const stockPanel = $("stock-panel");
+
+  if (stockPanel && !$("clear-stock-btn")) {
+    const clearButton = makeButton(
+      "CLEAR ALL STOCK",
+      () => {
+        if (!items.length) return;
+
+        if (confirm("Delete all saved groceries?")) {
+          items = [];
+          saveItems();
+          resetForm();
+          render();
+        }
+      },
+      "clear-stock-btn"
+    );
+
+    clearButton.id = "clear-stock-btn";
+    stockPanel.append(clearButton);
+  }
+
+/* DATE TYPE CONTROLS */
+
+const dateTypeSelect = $("date-type");
+const dateInputContainer = $("date-input-container");
+const dateLabel = $("date-label");
+const foodDateInput = $("food-date");
+
+function updateDateField() {
+  if (!dateTypeSelect || !foodDateInput) return;
+
+  const type = dateTypeSelect.value;
+
+  const labels = {
+    expiration: "EXPIRATION DATE",
+    purchased: "PURCHASE DATE",
+    production: "PRODUCTION DATE",
+    none: "NO DATE"
+  };
+
+  if (dateLabel) {
+    dateLabel.textContent = labels[type];
+  }
+
+  if (dateInputContainer) {
+    dateInputContainer.hidden = type === "none";
+  }
+
+  foodDateInput.disabled = type === "none";
+
+  if (type === "none") {
+    foodDateInput.value = "";
+  }
+}
+
+dateTypeSelect?.addEventListener("change", updateDateField);
+
+updateDateField();
+
+  /* INITIAL PAGE STATE */
+
+  setView("fridge");
+  setMode("add");
+})();

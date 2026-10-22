@@ -1,3 +1,18 @@
+
+/* =========================================
+   FRESH'D — GLOBAL STYLES
+========================================= */
+
+:root {
+  --black: #0b0b0b;
+  --cream: #f5f0e6;
+  --olive: #687b43;
+  --green: #a4b77b;
+  --red: #c63e31;
+  --yellow: #f0c65a;
+  --muted: #aaa69d;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -8,241 +23,707 @@ html {
 
 body {
   margin: 0;
-  background: #0b0b0b;
-  color: #f5f0e6;
-  font-family: Arial, sans-serif;
+  background: var(--black);
+  color: var(--cream);
+  font-family: Arial, Helvetica, sans-serif;
 }
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: var(--yellow);
+  color: var(--black);
+}
+
+/* =========================================
+   SHARED STICKER NAVIGATION
+========================================= */
 
 .site-header {
-  position: absolute;
-  top: 25px;
-  left: 0;
   width: 100%;
-  z-index: 10;
-  text-align: center;
-}
-
-.logo img {
-  width: 115px;
-  height: auto;
-}
-
-.hero {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 18px 40px 12px;
   position: relative;
-  min-height: 100vh;
+  z-index: 100;
+  background: #080808;
+}
+
+.sticker-nav {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(4px, 1vw, 16px);
+}
+
+.sticker-nav a {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  flex: 1 1 0;
+  min-width: 0;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  transition: transform 0.25s ease;
 }
 
-.fridge-area {
-  text-align: center;
-  animation: fridgeEntrance 1.3s ease-out both;
+.sticker-nav a:hover {
+  transform: translateY(-6px) rotate(-3deg);
 }
 
-.fridge {
-  width: 280px;
-  height: 460px;
+.sticker-nav a:focus-visible {
+  outline: 2px dashed var(--cream);
+  outline-offset: 5px;
+  border-radius: 8px;
+}
+
+.sticker-nav img {
+  display: block;
+  width: clamp(58px, 8vw, 120px);
+  height: clamp(58px, 8vw, 120px);
+  object-fit: contain;
+}
+
+.sticker-nav a[aria-current="page"] img {
+  filter: drop-shadow(0 4px 0 rgba(255,255,255,0.12));
+}
+
+/* =========================================
+   HOMEPAGE HERO
+========================================= */
+
+.home-hero {
+  min-height: 730px;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 75px 7% 105px;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  gap: 45px;
+  position: relative;
+}
+
+.home-hero-copy {
+  position: relative;
+  z-index: 2;
+}
+
+.home-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  line-height: 1.7;
+  text-transform: uppercase;
+}
+
+.home-hero h1 {
+  margin: 28px 0;
+  font-size: clamp(75px, 10vw, 155px);
+  font-weight: 900;
+  letter-spacing: -9px;
+  line-height: 0.82;
+}
+
+.home-hero h1 span {
+  color: var(--green);
+}
+
+.home-tagline {
+  font-size: clamp(15px, 1.7vw, 23px);
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.home-description {
+  max-width: 440px;
+  color: #c8c5bd;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 30px;
+}
+
+.home-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 17px 24px;
+  background: var(--green);
+  border: 2px solid var(--green);
+  color: var(--black);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition: transform 0.25s, background 0.25s;
+}
+
+.home-primary-btn:hover {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  transform: translateY(-4px);
+}
+
+.home-secondary-btn {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-decoration: none;
+  border-bottom: 2px solid var(--cream);
+  padding-bottom: 6px;
+}
+
+.home-secondary-btn:hover {
+  color: var(--yellow);
+  border-color: var(--yellow);
+}
+
+.home-small-note {
+  margin-top: 32px;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 3px;
+}
+
+/* =========================================
+   INTERACTIVE FRIDGE
+========================================= */
+
+.home-fridge-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.home-fridge-button {
+  display: block;
+  width: min(100%, 430px);
   border: 0;
   padding: 0;
   background: transparent;
   cursor: pointer;
-  perspective: 900px;
-  filter: drop-shadow(0 20px 25px #000);
-}
-
-.fridge-top {
-  position: relative;
-  width: 100%;
-  height: 72%;
-  background: #aaa;
-  border: 5px solid #777;
-  border-radius: 10px 10px 3px 3px;
-  transform-style: preserve-3d;
-}
-
-.fridge-interior {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(#e9e9e5, #b7bec0);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  padding: 18px 10px;
-}
-
-.shelf {
-  width: 100%;
-  height: 5px;
-  background: #e7f0f0;
-  box-shadow: 0 3px 6px #777;
-}
-
-.fridge-door {
-  position: absolute;
-  top: 0;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(
-    100deg,
-    #777 0%,
-    #dedede 28%,
-    #aaa 55%,
-    #ededed 80%,
-    #777 100%
-  );
-  border: 2px solid #888;
-  backface-visibility: hidden;
-  transition: transform 0.9s ease;
-}
-
-.left-door {
-  left: 0;
-  transform-origin: left center;
-  border-radius: 6px 0 0 0;
-}
-
-.right-door {
-  right: 0;
-  transform-origin: right center;
-  border-radius: 0 6px 0 0;
-}
-
-.handle {
-  position: absolute;
-  top: 23%;
-  width: 7px;
-  height: 120px;
-  background: linear-gradient(90deg, #666, #eee, #777);
-  border-radius: 5px;
-  box-shadow: 2px 2px 3px #555;
-}
-
-.left-door .handle {
-  right: 12px;
-}
-
-.right-door .handle {
-  left: 12px;
-}
-
-.fridge.open .left-door {
-  transform: rotateY(-115deg);
-}
-
-.fridge.open .right-door {
-  transform: rotateY(115deg);
-}
-
-.freezer-drawer {
-  position: relative;
-  height: 28%;
-  margin-top: 4px;
-  background: linear-gradient(100deg, #888, #ddd, #999, #eee, #777);
-  border: 4px solid #777;
-  border-radius: 2px 2px 10px 10px;
-}
-
-.freezer-handle {
-  position: absolute;
-  top: 15px;
-  left: 20%;
-  width: 60%;
-  height: 9px;
-  border-radius: 6px;
-  background: linear-gradient(#555, #eee, #777);
-}
-
-.fridge-hint {
-  margin-top: 25px;
-  font-size: 10px;
-  letter-spacing: 4px;
-  color: #aaa;
-}
-
-.sticker {
-  position: absolute;
-  z-index: 5;
-  padding: 18px 22px;
-  color: #fff4df;
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 14px;
-  border: 3px solid #fff4df;
-  border-radius: 45% 55% 50% 45%;
+  filter: drop-shadow(0 28px 25px rgba(0,0,0,0.7));
   transition: transform 0.3s ease;
 }
 
-.sticker:hover {
-  transform: scale(1.12) rotate(0deg);
+.home-fridge-button:hover {
+  transform: scale(1.04) rotate(-1deg);
 }
 
-.sticker-fill {
-  top: 34%;
-  left: 15%;
-  background: #d6a400;
-  transform: rotate(-12deg);
+.home-fridge-button:focus-visible {
+  outline: 3px dashed var(--yellow);
+  outline-offset: 8px;
 }
 
-.sticker-buy {
-  bottom: 24%;
-  left: 17%;
-  background: #293379;
-  transform: rotate(9deg);
+.home-fridge-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 580px;
+  object-fit: contain;
 }
 
-.sticker-customize {
-  top: 35%;
-  right: 13%;
-  background: #b81817;
-  transform: rotate(11deg);
+.home-fridge-sticker {
+  position: absolute;
+  top: 4%;
+  right: 0;
+  z-index: 2;
+  width: 115px;
+  height: 115px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--red);
+  color: var(--cream);
+  border: 3px dashed var(--cream);
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 900;
+  text-align: center;
+  transform: rotate(15deg);
+  pointer-events: none;
 }
 
-.sticker-useby {
-  bottom: 23%;
-  right: 17%;
-  background: #537e35;
-  transform: rotate(-9deg);
+.home-fridge-sticker span {
+  font-size: 30px;
 }
 
-.placeholder-section {
-  min-height: 65vh;
-  padding: 100px 10%;
-  border-top: 1px solid #333;
+.home-fridge-hint {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 24px;
 }
 
-.placeholder-section h2 {
-  font-size: clamp(36px, 6vw, 70px);
+/* =========================================
+   MARQUEE
+========================================= */
+
+.home-marquee {
+  overflow: hidden;
+  background: var(--green);
+  color: var(--black);
+  padding: 19px 0;
+  border-top: 2px solid var(--black);
+  border-bottom: 2px solid var(--black);
 }
 
-@keyframes fridgeEntrance {
+.home-marquee-track {
+  width: max-content;
+  white-space: nowrap;
+  font-size: clamp(18px, 3vw, 32px);
+  font-weight: 900;
+  letter-spacing: 4px;
+  animation: freshdMarquee 22s linear infinite;
+}
+
+@keyframes freshdMarquee {
   from {
-    opacity: 0;
-    transform: scale(0.88);
+    transform: translateX(0);
   }
+
   to {
-    opacity: 1;
-    transform: scale(1);
+    transform: translateX(-50%);
   }
 }
+
+/* =========================================
+   FEATURES
+========================================= */
+
+.home-features {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 110px 7%;
+}
+
+.home-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 45px;
+}
+
+.home-section-heading h2,
+.home-stock-copy h2 {
+  margin: 18px 0 0;
+  font-size: clamp(50px, 7vw, 100px);
+  font-weight: 900;
+  letter-spacing: -5px;
+  line-height: 0.9;
+}
+
+.home-section-heading h2 span,
+.home-stock-copy h2 span {
+  color: var(--green);
+}
+
+.home-section-heading > p {
+  max-width: 270px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  line-height: 1.8;
+}
+
+.home-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.home-feature-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+  padding: 27px;
+  text-decoration: none;
+  border: 2px solid transparent;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.home-feature-card:hover {
+  transform: translateY(-10px) rotate(-1deg);
+  box-shadow: 10px 12px 0 rgba(255,255,255,0.1);
+}
+
+.feature-green {
+  background: #a6ba7c;
+  color: #10140b;
+}
+
+.feature-cream {
+  background: #e9dfc8;
+  color: #17140e;
+}
+
+.feature-red {
+  background: #c94d3d;
+  color: #fff5e6;
+}
+
+.feature-dark {
+  background: #292c22;
+  color: #f5f0e6;
+  border-color: #69764b;
+}
+
+.feature-number {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.feature-icon {
+  margin: 25px 0 12px;
+  font-size: 65px;
+}
+
+.home-feature-card h3 {
+  margin: 0 0 20px;
+  font-size: clamp(32px, 3vw, 47px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -2px;
+}
+
+.home-feature-card p {
+  max-width: 230px;
+  margin: 0 0 30px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.feature-arrow {
+  position: absolute;
+  right: 23px;
+  bottom: 18px;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+/* =========================================
+   STOCK SECTION
+========================================= */
+
+.home-stock-section {
+  display: grid;
+  grid-template-columns: 1fr 0.85fr;
+  align-items: center;
+  gap: 70px;
+  padding: 110px max(7%, calc((100% - 1290px) / 2));
+  background: #1a1e15;
+}
+
+.home-stock-copy > p:not(.home-eyebrow) {
+  max-width: 430px;
+  margin: 30px 0;
+  color: #d0d1c7;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+/* =========================================
+   RECEIPT
+========================================= */
+
+.home-stock-receipt {
+  width: min(100%, 370px);
+  justify-self: center;
+  padding: 35px 30px;
+  background: #f1e7d1;
+  color: #17140e;
+  text-align: center;
+  box-shadow: 12px 12px 0 rgba(0,0,0,0.25);
+  transform: rotate(2deg);
+}
+
+.home-receipt-top {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 4px;
+}
+
+.home-stock-receipt h3 {
+  margin: 25px 0 15px;
+  font-size: 50px;
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -2px;
+}
+
+.home-receipt-sub {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.home-receipt-rule {
+  border-top: 2px dashed #28231c;
+  margin: 27px 0;
+}
+
+.home-receipt-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin: 17px 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.home-receipt-line strong {
+  font-size: 22px;
+}
+
+.home-receipt-total {
+  font-size: 14px;
+}
+
+.home-barcode {
+  height: 65px;
+  margin: 32px 0 18px;
+  background: repeating-linear-gradient(
+    90deg,
+    #17140e 0px,
+    #17140e 2px,
+    transparent 2px,
+    transparent 5px,
+    #17140e 5px,
+    #17140e 9px,
+    transparent 9px,
+    transparent 12px
+  );
+}
+
+.home-receipt-bottom {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+/* =========================================
+   FINAL CTA
+========================================= */
+
+.home-final-cta {
+  padding: 125px 20px;
+  text-align: center;
+}
+
+.home-final-cta h2 {
+  margin: 20px 0;
+  font-size: clamp(75px, 13vw, 180px);
+  font-weight: 900;
+  line-height: 0.85;
+  letter-spacing: -8px;
+}
+
+.home-final-cta h2 span {
+  color: var(--red);
+}
+
+.home-final-cta > p:not(.home-eyebrow) {
+  margin: 28px 0;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.home-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 28px 7%;
+  border-top: 1px solid #393939;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.home-footer a {
+  text-decoration: none;
+}
+
+.home-footer a:hover {
+  color: var(--green);
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 1050px) {
+  .home-hero {
+    padding: 70px 5%;
+    gap: 20px;
+  }
+
+  .home-hero h1 {
+    font-size: clamp(65px, 9vw, 110px);
+    letter-spacing: -5px;
+  }
+
+  .home-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-feature-card {
+    min-height: 320px;
+  }
+
+  .home-stock-section {
+    padding: 85px 6%;
+    gap: 35px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
 
 @media (max-width: 700px) {
-  .fridge {
-    width: 210px;
-    height: 345px;
+  .site-header {
+    padding: 12px;
   }
 
-  .sticker {
-    padding: 10px 12px;
-    font-size: 10px;
+  .sticker-nav {
+    justify-content: flex-start;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
   }
 
-  .sticker-fill { left: 2%; top: 25%; }
-  .sticker-buy { left: 2%; bottom: 19%; }
-  .sticker-customize { right: 2%; top: 25%; }
-  .sticker-useby { right: 2%; bottom: 19%; }
+  .sticker-nav a {
+    flex: 0 0 64px;
+  }
+
+  .sticker-nav img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .home-hero {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    padding: 65px 7% 75px;
+    text-align: center;
+  }
+
+  .home-hero h1 {
+    font-size: clamp(65px, 14vw, 110px);
+    letter-spacing: -5px;
+  }
+
+  .home-description {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .home-hero-actions {
+    justify-content: center;
+  }
+
+  .home-fridge-area {
+    margin-top: 30px;
+  }
+
+  .home-fridge-button {
+    max-width: 310px;
+  }
+
+  .home-fridge-sticker {
+    right: 5%;
+    width: 90px;
+    height: 90px;
+    font-size: 14px;
+  }
+
+  .home-features {
+    padding: 75px 6%;
+  }
+
+  .home-section-heading {
+    display: block;
+  }
+
+  .home-section-heading h2,
+  .home-stock-copy h2 {
+    font-size: clamp(48px, 11vw, 80px);
+    letter-spacing: -3px;
+  }
+
+  .home-feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-feature-card {
+    min-height: 290px;
+  }
+
+  .home-stock-section {
+    grid-template-columns: 1fr;
+    padding: 80px 7%;
+    text-align: center;
+  }
+
+  .home-stock-copy > p:not(.home-eyebrow) {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .home-stock-receipt {
+    margin-top: 20px;
+  }
+
+  .home-final-cta {
+    padding: 95px 5%;
+  }
+
+  .home-final-cta h2 {
+    font-size: clamp(65px, 15vw, 115px);
+    letter-spacing: -4px;
+  }
+
+  .home-footer {
+    justify-content: center;
+    text-align: center;
+  }
 }
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
 
 @media (prefers-reduced-motion: reduce) {
   *,
